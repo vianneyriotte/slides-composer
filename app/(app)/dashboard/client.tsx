@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { signOut } from "@/lib/auth/client";
 import { toast } from "sonner";
@@ -75,9 +76,14 @@ export function DashboardClient({ presentations }: { presentations: Presentation
           <h1 className="text-2xl font-bold">Mes présentations</h1>
           <p className="text-sm text-muted-foreground">{presentations.length} présentation(s)</p>
         </div>
-        <Button variant="ghost" onClick={() => signOut().then(() => router.push("/"))}>
-          Déconnexion
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/dashboard/new" className={buttonVariants({ size: "sm" })}>
+            + Créer
+          </Link>
+          <Button variant="ghost" size="sm" onClick={() => signOut().then(() => router.push("/"))}>
+            Déconnexion
+          </Button>
+        </div>
       </div>
 
       {/* Drop zone */}
