@@ -54,6 +54,8 @@ export function SlideEditor({ mode = "create", initialData }: EditorProps) {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiProvider, setAiProvider] = useState<AiProvider>("claude");
   const [generating, setGenerating] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const compiledHtml = useMemo(
@@ -226,23 +228,66 @@ export function SlideEditor({ mode = "create", initialData }: EditorProps) {
             </>
           )}
 
-          {/* Editor textarea */}
-          <div className="flex flex-1 flex-col overflow-hidden p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-medium text-muted-foreground">
-                {isHtmlMode ? "HTML" : "Markdown"}
-              </p>
-              {!isHtmlMode && (
-                <p className="text-xs text-muted-foreground">Séparez les slides avec ---</p>
-              )}
+          {/* Editor: Markdown textarea or HTML file upload */}
+          {isHtmlMode ? (
+            <div className="flex flex-1 flex-col items-center justify-center p-6">
+              <div
+                className={`flex w-full flex-1 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${
+                  dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-muted-foreground/50"
+                }`}
+                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragActive(false);
+                  const file = e.dataTransfer.files[0];
+                  if (file?.name.endsWith(".html")) {
+                    file.text().then((text) => {
+                      setRawHtml(text);
+                      setTitle(file.name.replace(".html", ""));
+                      toast.success("Fichier chargé — vérifiez la preview puis cliquez Mettre à jour");
+                    });
+                  } else {
+                    toast.error("Seuls les fichiers .html sont acceptés");
+                  }
+                }}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-3 text-muted-foreground"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                <p className="text-sm font-medium">Remplacer par un nouveau fichier HTML</p>
+                <p className="text-xs text-muted-foreground">Glissez-déposez ou cliquez</p>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".html"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file?.name.endsWith(".html")) {
+                    file.text().then((text) => {
+                      setRawHtml(text);
+                      setTitle(file.name.replace(".html", ""));
+                      toast.success("Fichier chargé — vérifiez la preview puis cliquez Mettre à jour");
+                    });
+                  }
+                }}
+              />
             </div>
-            <textarea
-              value={isHtmlMode ? rawHtml : markdown}
-              onChange={(e) => isHtmlMode ? setRawHtml(e.target.value) : setMarkdown(e.target.value)}
-              className="flex-1 resize-none rounded-md border bg-muted/30 p-3 font-mono text-sm leading-relaxed outline-none focus:ring-1 focus:ring-ring"
-              spellCheck={false}
-            />
-          </div>
+          ) : (
+            <div className="flex flex-1 flex-col overflow-hidden p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-medium text-muted-foreground">Markdown</p>
+                <p className="text-xs text-muted-foreground">Séparez les slides avec ---</p>
+              </div>
+              <textarea
+                value={markdown}
+                onChange={(e) => setMarkdown(e.target.value)}
+                className="flex-1 resize-none rounded-md border bg-muted/30 p-3 font-mono text-sm leading-relaxed outline-none focus:ring-1 focus:ring-ring"
+                spellCheck={false}
+              />
+            </div>
+          )}
         </div>
 
         {/* Right: Live preview */}
