@@ -43,7 +43,7 @@ export function SlideEditor() {
   );
 
   const slideCount = useMemo(
-    () => markdown.split(/^---$/m).filter((s) => s.trim()).length,
+    () => markdown.split(/^---\s*$/m).filter((s) => s.trim()).length,
     [markdown]
   );
 

@@ -155,7 +155,7 @@ function renderSlide(slide: SlideContent, index: number, total: number): string 
 
 export function compileMarkdownToHtml(markdown: string, preset: Preset, title: string): string {
   const slides = markdown
-    .split(/^---$/m)
+    .split(/^---\s*$/m)
     .map((s) => s.trim())
     .filter(Boolean);
 
