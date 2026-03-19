@@ -80,6 +80,9 @@ export function DashboardClient({ presentations }: { presentations: Presentation
           <Link href="/dashboard/new" className={buttonVariants({ size: "sm" })}>
             + Créer
           </Link>
+          <Link href="/dashboard/settings" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+            Paramètres
+          </Link>
           <Button variant="ghost" size="sm" onClick={() => signOut().then(() => router.push("/"))}>
             Déconnexion
           </Button>

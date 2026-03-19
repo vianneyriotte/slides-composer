@@ -58,6 +58,20 @@ export const verification = sqliteTable("verification", {
 // App tables
 // ========================
 
+export const aiProvider = ["claude", "openai", "gemini", "mistral"] as const;
+export type AiProvider = (typeof aiProvider)[number];
+
+export const apiKey = sqliteTable("api_key", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(), // claude | openai | gemini | mistral
+  encryptedKey: text("encrypted_key").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
 export const presentation = sqliteTable("presentation", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),

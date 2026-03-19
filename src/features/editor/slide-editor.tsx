@@ -2,12 +2,15 @@
 
 import { useState, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { presets, type Preset } from "./presets";
 import { compileMarkdownToHtml } from "./compiler";
 import { savePresentation } from "./actions";
+import { PROVIDER_INFO } from "@/lib/ai/providers";
+import type { AiProvider } from "@/lib/db/schema";
 
 const DEFAULT_MARKDOWN = `# Ma Présentation
 Sous-titre ici
@@ -30,6 +33,7 @@ export function SlideEditor() {
   const [selectedPreset, setSelectedPreset] = useState<Preset>(presets[0]);
   const [saving, setSaving] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  const [aiProvider, setAiProvider] = useState<AiProvider>("claude");
   const [generating, setGenerating] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -64,7 +68,7 @@ export function SlideEditor() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: aiPrompt }),
+        body: JSON.stringify({ prompt: aiPrompt, provider: aiProvider }),
       });
 
       if (!res.ok) {
@@ -83,7 +87,7 @@ export function SlideEditor() {
     }
 
     setGenerating(false);
-  }, [aiPrompt]);
+  }, [aiPrompt, aiProvider]);
 
   return (
     <div className="flex h-screen flex-col">
@@ -111,7 +115,27 @@ export function SlideEditor() {
         <div className="flex w-[420px] flex-col border-r">
           {/* AI Generator */}
           <div className="border-b p-3">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">Générer avec l&apos;IA</p>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-medium text-muted-foreground">Générer avec l&apos;IA</p>
+              <Link href="/dashboard/settings" className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground">
+                Clés API
+              </Link>
+            </div>
+            <div className="mb-2 flex gap-1">
+              {(Object.keys(PROVIDER_INFO) as AiProvider[]).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setAiProvider(p)}
+                  className={`rounded-md border px-2 py-0.5 text-xs transition-colors ${
+                    aiProvider === p
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:bg-muted"
+                  }`}
+                >
+                  {PROVIDER_INFO[p].name.split(" ")[0]}
+                </button>
+              ))}
+            </div>
             <div className="flex gap-2">
               <Input
                 value={aiPrompt}
