@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Basics — Les commandes essentielles</title>
+
+    <!-- Font: JetBrains Mono — monospace only for Terminal Green aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES (TERMINAL GREEN THEME)
+           Change these to change the whole look
+           =========================================== */
+        :root {
+            /* Colors — Terminal Green preset */
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #1c2129;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-dim: #484f58;
+            --accent: #39d353;
+            --accent-glow: rgba(57, 211, 83, 0.3);
+            --accent-dim: rgba(57, 211, 83, 0.15);
+            --accent-orange: #e3b341;
+            --accent-red: #f85149;
+            --accent-blue: #58a6ff;
+            --border: #30363d;
+
+            /* Typography — JetBrains Mono only */
+            --font-mono: 'JetBrains Mono', monospace;
+            --title-size: clamp(1.8rem, 5vw, 4rem);
+            --h2-size: clamp(1.2rem, 3vw, 2rem);
+            --h3-size: clamp(0.9rem, 2vw, 1.4rem);
+            --body-size: clamp(0.7rem, 1.3vw, 1rem);
+            --small-size: clamp(0.6rem, 0.9vw, 0.8rem);
+            --code-size: clamp(0.65rem, 1.1vw, 0.9rem);
+
+            /* Spacing */
+            --slide-padding: clamp(1.5rem, 4vw, 4rem);
+            --content-gap: clamp(0.5rem, 2vw, 2rem);
+            --element-gap: clamp(0.25rem, 1vw, 1rem);
+
+            /* Animation */
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.6s;
+        }
+
+        /* ===========================================
+           RESET & BASE
+           =========================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ===========================================
+           VIEWPORT FITTING: MANDATORY BASE STYLES
+           =========================================== */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+        .card, .container, .content-box {
+            max-width: min(90vw, 1000px);
+            max-height: min(80vh, 700px);
+        }
+        .feature-list, .bullet-list {
+            gap: clamp(0.4rem, 1vh, 1rem);
+        }
+        .feature-list li, .bullet-list li {
+            font-size: var(--body-size);
+            line-height: 1.4;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+            gap: clamp(0.5rem, 1.5vw, 1rem);
+        }
+        img, .image-container {
+            max-width: 100%;
+            max-height: min(50vh, 400px);
+            object-fit: contain;
+        }
+
+        /* Short viewports (< 700px height) */
+        @media (max-height: 700px) {
+            :root {
+                --slide-padding: clamp(0.75rem, 3vw, 2rem);
+                --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+                --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+                --h2-size: clamp(1rem, 3vw, 1.75rem);
+            }
+        }
+        @media (max-height: 600px) {
+            :root {
+                --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+                --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+                --title-size: clamp(1.1rem, 4vw, 2rem);
+                --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+            }
+            .nav-dots, .keyboard-hint, .decorative { display: none; }
+        }
+        @media (max-height: 500px) {
+            :root {
+                --slide-padding: clamp(0.4rem, 2vw, 1rem);
+                --title-size: clamp(1rem, 3.5vw, 1.5rem);
+                --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+                --body-size: clamp(0.65rem, 1vw, 0.85rem);
+            }
+        }
+        @media (max-width: 600px) {
+            :root { --title-size: clamp(1.25rem, 7vw, 2.5rem); }
+            .grid { grid-template-columns: 1fr; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+            html { scroll-behavior: auto; }
+        }
+
+        /* ===========================================
+           TERMINAL GREEN — GLOBAL STYLES
+           =========================================== */
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
+
+        /* Scan lines overlay — CRT monitor effect */
+        .slide::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(57, 211, 83, 0.02) 2px,
+                rgba(57, 211, 83, 0.02) 4px
+            );
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Vignette effect */
+        .slide::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        /* ===========================================
+           ANIMATION CLASSES
+           =========================================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .slide.visible .reveal:nth-child(1) { transition-delay: 0.05s; }
+        .slide.visible .reveal:nth-child(2) { transition-delay: 0.15s; }
+        .slide.visible .reveal:nth-child(3) { transition-delay: 0.25s; }
+        .slide.visible .reveal:nth-child(4) { transition-delay: 0.35s; }
+        .slide.visible .reveal:nth-child(5) { transition-delay: 0.45s; }
+        .slide.visible .reveal:nth-child(6) { transition-delay: 0.55s; }
+
+        /* Blinking cursor animation */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .cursor {
+            display: inline-block;
+            width: clamp(6px, 0.8vw, 10px);
+            height: 1em;
+            background: var(--accent);
+            margin-left: 4px;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+
+        /* Glitch-in for titles */
+        @keyframes glitchIn {
+            0% { opacity: 0; transform: translateX(-8px); filter: blur(4px); }
+            30% { opacity: 1; transform: translateX(4px); filter: blur(0); }
+            60% { transform: translateX(-2px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* ===========================================
+           PROGRESS BAR
+           =========================================== */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            z-index: 100;
+            transition: width 0.3s ease;
+        }
+
+        /* ===========================================
+           NAVIGATION DOTS
+           =========================================== */
+        .nav-dots {
+            position: fixed;
+            right: clamp(0.5rem, 2vw, 1.5rem);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(4px, 0.5vw, 8px);
+            z-index: 100;
+        }
+        .nav-dot {
+            width: clamp(4px, 0.5vw, 6px);
+            height: clamp(4px, 0.5vw, 6px);
+            border-radius: 50%;
+            background: var(--text-dim);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+        .nav-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 6px var(--accent-glow);
+            transform: scale(1.5);
+        }
+
+        /* ===========================================
+           SLIDE TYPES
+           =========================================== */
+
+        /* --- Title Slide --- */
+        .title-slide .slide-content {
+            align-items: center;
+            text-align: center;
+        }
+        .title-slide .prompt {
+            font-size: var(--small-size);
+            color: var(--text-dim);
+            margin-bottom: var(--content-gap);
+        }
+        .title-slide .prompt span { color: var(--accent); }
+        .title-slide h1 {
+            font-size: var(--title-size);
+            font-weight: 700;
+            line-height: 1;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow), 0 0 40px rgba(57, 211, 83, 0.1);
+            margin-bottom: clamp(0.3rem, 1vw, 0.8rem);
+        }
+        .title-slide h1 .white { color: var(--text-primary); }
+        .title-slide .subtitle {
+            font-size: var(--body-size);
+            color: var(--text-secondary);
+        }
+        .title-slide .tree {
+            margin-top: clamp(1rem, 3vw, 3rem);
+            font-size: var(--small-size);
+            color: var(--text-dim);
+            text-align: left;
+        }
+        .title-slide .tree .g { color: var(--accent); }
+        .title-slide .tree .y { color: var(--accent-orange); }
+
+        /* --- Command Slide --- */
+        .cmd-slide .slide-content {
+            gap: clamp(0.5rem, 1.5vw, 1.5rem);
+        }
+        .cmd-slide .slide-header {
+            display: flex;
+            align-items: center;
+            gap: clamp(0.5rem, 1vw, 1rem);
+        }
+        .cmd-slide .slide-number {
+            font-size: var(--small-size);
+            color: var(--text-dim);
+            min-width: clamp(24px, 3vw, 40px);
+        }
+        .cmd-slide h2 {
+            font-size: var(--h2-size);
+            font-weight: 700;
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+        .cmd-slide .description {
+            font-size: var(--body-size);
+            color: var(--text-secondary);
+            line-height: 1.5;
+            max-width: min(80vw, 700px);
+        }
+        .cmd-slide .terminal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            max-width: min(85vw, 750px);
+        }
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: clamp(4px, 0.5vw, 6px);
+            padding: clamp(4px, 0.6vw, 8px) clamp(8px, 1vw, 12px);
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+        }
+        .terminal-dot {
+            width: clamp(6px, 0.7vw, 10px);
+            height: clamp(6px, 0.7vw, 10px);
+            border-radius: 50%;
+        }
+        .terminal-dot.red { background: var(--accent-red); }
+        .terminal-dot.yellow { background: var(--accent-orange); }
+        .terminal-dot.green { background: var(--accent); }
+        .terminal-title {
+            font-size: var(--small-size);
+            color: var(--text-dim);
+            margin-left: clamp(4px, 0.5vw, 8px);
+        }
+        .terminal-body {
+            padding: clamp(0.5rem, 1.5vw, 1.2rem);
+        }
+        .terminal-body code {
+            font-family: var(--font-mono);
+            font-size: var(--code-size);
+            line-height: 1.6;
+            display: block;
+        }
+        .terminal-body .prompt-char { color: var(--accent); }
+        .terminal-body .flag { color: var(--accent-blue); }
+        .terminal-body .string { color: var(--accent-orange); }
+        .terminal-body .comment { color: var(--text-dim); font-style: italic; }
+        .terminal-body .output { color: var(--text-secondary); }
+
+        /* When to use badge */
+        .use-case {
+            display: flex;
+            align-items: flex-start;
+            gap: clamp(0.3rem, 0.8vw, 0.6rem);
+            font-size: var(--body-size);
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        .use-case::before {
+            content: '→';
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        /* --- Recap Slide --- */
+        .recap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, clamp(120px, 18vw, 200px)), 1fr));
+            gap: clamp(0.3rem, 0.8vw, 0.6rem);
+            max-width: min(90vw, 900px);
+        }
+        .recap-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: clamp(0.3rem, 0.8vw, 0.6rem) clamp(0.5rem, 1vw, 0.8rem);
+            transition: border-color 0.3s ease;
+        }
+        .recap-item:hover {
+            border-color: var(--accent);
+        }
+        .recap-item .cmd-name {
+            font-size: var(--small-size);
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+        .recap-item .cmd-desc {
+            font-size: clamp(0.5rem, 0.7vw, 0.65rem);
+            color: var(--text-dim);
+        }
+
+        /* --- Keyboard hint (bottom) --- */
+        .keyboard-hint {
+            position: fixed;
+            bottom: clamp(0.5rem, 1.5vw, 1rem);
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: var(--small-size);
+            color: var(--text-dim);
+            z-index: 100;
+            opacity: 0;
+            animation: fadeIn 1s ease 2s forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+    </style>
+</head>
+<body>
+    <!-- === PROGRESS BAR === -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- === NAVIGATION DOTS === -->
+    <nav class="nav-dots" id="navDots" aria-label="Navigation des slides"></nav>
+
+    <!-- === SLIDE 1: TITLE === -->
+    <section class="slide title-slide" aria-label="Introduction">
+        <div class="slide-content">
+            <p class="prompt reveal"><span>vianneyriotte</span>@dev ~ %</p>
+            <h1 class="reveal"><span class="white">Git</span> Basics<span class="cursor"></span></h1>
+            <p class="subtitle reveal">// les commandes essentielles</p>
+            <div class="tree reveal">
+                <span class="g">├──</span> Initialiser &amp; Cloner<br>
+                <span class="g">├──</span> Suivre &amp; Valider<br>
+                <span class="g">├──</span> Synchroniser<br>
+                <span class="y">├──</span> Brancher &amp; Fusionner<br>
+                <span class="g">└──</span> <span class="y">13 slides</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- === SLIDE 2: git init === -->
+    <section class="slide cmd-slide" aria-label="git init">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">01</span>
+                <h2>git init</h2>
+            </div>
+            <p class="description reveal">Initialise un nouveau dépôt Git dans le répertoire courant. Crée un dossier caché <code>.git/</code> qui contient tout l'historique.</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="prompt-char">$</span> mkdir mon-projet</code>
+                    <code><span class="prompt-char">$</span> cd mon-projet</code>
+                    <code><span class="prompt-char">$</span> git init</code>
+                    <code><span class="output">Initialized empty Git repository in /mon-projet/.git/</span></code>
+                </div>
+            </div>
+            <p class="use-case reveal">Au tout début d'un nouveau projet local</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 3: git clone === -->
+    <section class="slide cmd-slide" aria-label="git clone">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">02</span>
+                <h2>git clone</h2>
+            </div>
+            <p class="description reveal">Copie un dépôt distant (GitHub, GitLab…) sur votre machine, avec tout son historique et ses branches.</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="prompt-char">$</span> git clone <span class="string">https://github.com/user/repo.git</span></code>
+                    <code><span class="output">Cloning into 'repo'...</span></code>
+                    <code><span class="output">done.</span></code>
+                </div>
+            </div>
+            <p class="use-case reveal">Pour récupérer un projet existant depuis un serveur distant</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 4: git status === -->
+    <section class="slide cmd-slide" aria-label="git status">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">03</span>
+                <h2>git status</h2>
+            </div>
+            <p class="description reveal">Affiche l'état du répertoire de travail : fichiers modifiés, ajoutés à l'index, ou non suivis. Votre boussole au quotidien.</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="prompt-char">$</span> git status</code>
+                    <code><span class="output">On branch main</span></code>
+                    <code><span class="output">Changes not staged for commit:</span></code>
+                    <code>&nbsp;&nbsp;<span style="color:#f85149">modified:   index.html</span></code>
+                    <code><span class="output">Untracked files:</span></code>
+                    <code>&nbsp;&nbsp;<span style="color:#39d353">style.css</span></code>
+                </div>
+            </div>
+            <p class="use-case reveal">Avant chaque commit, pour savoir où vous en êtes</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 5: git add === -->
+    <section class="slide cmd-slide" aria-label="git add">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">04</span>
+                <h2>git add</h2>
+            </div>
+            <p class="description reveal">Ajoute des fichiers à la zone de staging (index). C'est la sélection de ce qui sera inclus dans le prochain commit.</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="comment"># Ajouter un fichier spécifique</span></code>
+                    <code><span class="prompt-char">$</span> git add <span class="string">index.html</span></code>
+                    <code></code>
+                    <code><span class="comment"># Ajouter tous les fichiers modifiés</span></code>
+                    <code><span class="prompt-char">$</span> git add <span class="flag">.</span></code>
+                </div>
+            </div>
+            <p class="use-case reveal">Pour préparer les changements avant de les valider</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 6: git commit === -->
+    <section class="slide cmd-slide" aria-label="git commit">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">05</span>
+                <h2>git commit</h2>
+            </div>
+            <p class="description reveal">Enregistre un snapshot des fichiers staged dans l'historique. Chaque commit est un point de sauvegarde avec un message descriptif.</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="prompt-char">$</span> git commit <span class="flag">-m</span> <span class="string">"feat: ajout de la page d'accueil"</span></code>
+                    <code><span class="output">[main a1b2c3d] feat: ajout de la page d'accueil</span></code>
+                    <code><span class="output"> 2 files changed, 48 insertions(+)</span></code>
+                </div>
+            </div>
+            <p class="use-case reveal">Après chaque modification logique — petits commits fréquents</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 7: git log === -->
+    <section class="slide cmd-slide" aria-label="git log">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">06</span>
+                <h2>git log</h2>
+            </div>
+            <p class="description reveal">Affiche l'historique des commits. Utilisez les options pour un affichage compact ou graphique.</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="prompt-char">$</span> git log <span class="flag">--oneline --graph</span></code>
+                    <code><span style="color:#39d353">*</span> <span class="string">a1b2c3d</span> <span class="output">feat: ajout page d'accueil</span></code>
+                    <code><span style="color:#39d353">*</span> <span class="string">e4f5g6h</span> <span class="output">init: structure du projet</span></code>
+                    <code><span style="color:#39d353">*</span> <span class="string">i7j8k9l</span> <span class="output">Initial commit</span></code>
+                </div>
+            </div>
+            <p class="use-case reveal">Pour explorer l'historique et comprendre l'évolution du projet</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 8: git push === -->
+    <section class="slide cmd-slide" aria-label="git push">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">07</span>
+                <h2>git push</h2>
+            </div>
+            <p class="description reveal">Envoie vos commits locaux vers le dépôt distant. Partage votre travail avec l'équipe.</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="comment"># Premier push (lier la branche)</span></code>
+                    <code><span class="prompt-char">$</span> git push <span class="flag">-u</span> origin main</code>
+                    <code></code>
+                    <code><span class="comment"># Pushs suivants</span></code>
+                    <code><span class="prompt-char">$</span> git push</code>
+                </div>
+            </div>
+            <p class="use-case reveal">Après un ou plusieurs commits, pour synchroniser avec le remote</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 9: git pull === -->
+    <section class="slide cmd-slide" aria-label="git pull">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">08</span>
+                <h2>git pull</h2>
+            </div>
+            <p class="description reveal">Récupère et fusionne les changements du dépôt distant. Combine <code>git fetch</code> + <code>git merge</code> en une seule commande.</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="prompt-char">$</span> git pull</code>
+                    <code><span class="output">remote: Enumerating objects: 5, done.</span></code>
+                    <code><span class="output">Updating a1b2c3d..m4n5o6p</span></code>
+                    <code><span class="output">Fast-forward</span></code>
+                    <code><span class="output"> README.md | 12 +++++++++---</span></code>
+                </div>
+            </div>
+            <p class="use-case reveal">En début de session, pour récupérer le travail des collègues</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 10: git branch === -->
+    <section class="slide cmd-slide" aria-label="git branch">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">09</span>
+                <h2>git branch</h2>
+            </div>
+            <p class="description reveal">Gère les branches : lister, créer ou supprimer. Les branches permettent de travailler en parallèle sans impacter le code principal.</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="prompt-char">$</span> git branch              <span class="comment"># lister</span></code>
+                    <code><span style="color:#39d353">* main</span></code>
+                    <code>&nbsp;&nbsp;feature/login</code>
+                    <code></code>
+                    <code><span class="prompt-char">$</span> git branch <span class="string">feature/api</span>  <span class="comment"># créer</span></code>
+                </div>
+            </div>
+            <p class="use-case reveal">Pour isoler une feature, un bugfix, ou une expérimentation</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 11: git checkout / switch === -->
+    <section class="slide cmd-slide" aria-label="git checkout / switch">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">10</span>
+                <h2>git switch</h2>
+            </div>
+            <p class="description reveal">Change de branche. Remplace l'ancien <code>git checkout</code> pour la navigation entre branches (plus clair et moins d'erreurs).</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="comment"># Changer de branche</span></code>
+                    <code><span class="prompt-char">$</span> git switch <span class="string">feature/login</span></code>
+                    <code></code>
+                    <code><span class="comment"># Créer + changer en une commande</span></code>
+                    <code><span class="prompt-char">$</span> git switch <span class="flag">-c</span> <span class="string">feature/new</span></code>
+                    <code></code>
+                    <code><span class="comment"># Équivalent ancien (fonctionne encore)</span></code>
+                    <code><span class="prompt-char">$</span> git checkout <span class="string">feature/login</span></code>
+                </div>
+            </div>
+            <p class="use-case reveal">Pour naviguer entre les branches de travail</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 12: git merge === -->
+    <section class="slide cmd-slide" aria-label="git merge">
+        <div class="slide-content">
+            <div class="slide-header reveal">
+                <span class="slide-number">11</span>
+                <h2>git merge</h2>
+            </div>
+            <p class="description reveal">Fusionne une branche dans la branche courante. Intègre le travail parallèle dans le tronc commun.</p>
+            <div class="terminal reveal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <code><span class="comment"># D'abord, se placer sur la branche cible</span></code>
+                    <code><span class="prompt-char">$</span> git switch main</code>
+                    <code></code>
+                    <code><span class="comment"># Puis fusionner la feature</span></code>
+                    <code><span class="prompt-char">$</span> git merge <span class="string">feature/login</span></code>
+                    <code><span class="output">Merge made by the 'ort' strategy.</span></code>
+                </div>
+            </div>
+            <p class="use-case reveal">Quand une feature est terminée et prête à rejoindre main</p>
+        </div>
+    </section>
+
+    <!-- === SLIDE 13: RÉCAPITULATIF === -->
+    <section class="slide" aria-label="Récapitulatif">
+        <div class="slide-content" style="align-items: center; text-align: center;">
+            <h2 class="reveal" style="font-size: var(--h2-size); color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); margin-bottom: var(--content-gap);">// récap</h2>
+            <div class="recap-grid reveal">
+                <div class="recap-item">
+                    <div class="cmd-name">git init</div>
+                    <div class="cmd-desc">Nouveau dépôt</div>
+                </div>
+                <div class="recap-item">
+                    <div class="cmd-name">git clone</div>
+                    <div class="cmd-desc">Copier un dépôt</div>
+                </div>
+                <div class="recap-item">
+                    <div class="cmd-name">git status</div>
+                    <div class="cmd-desc">État actuel</div>
+                </div>
+                <div class="recap-item">
+                    <div class="cmd-name">git add</div>
+                    <div class="cmd-desc">Indexer</div>
+                </div>
+                <div class="recap-item">
+                    <div class="cmd-name">git commit</div>
+                    <div class="cmd-desc">Sauvegarder</div>
+                </div>
+                <div class="recap-item">
+                    <div class="cmd-name">git log</div>
+                    <div class="cmd-desc">Historique</div>
+                </div>
+                <div class="recap-item">
+                    <div class="cmd-name">git push</div>
+                    <div class="cmd-desc">Envoyer</div>
+                </div>
+                <div class="recap-item">
+                    <div class="cmd-name">git pull</div>
+                    <div class="cmd-desc">Récupérer</div>
+                </div>
+                <div class="recap-item">
+                    <div class="cmd-name">git branch</div>
+                    <div class="cmd-desc">Gérer les branches</div>
+                </div>
+                <div class="recap-item">
+                    <div class="cmd-name">git switch</div>
+                    <div class="cmd-desc">Changer de branche</div>
+                </div>
+                <div class="recap-item">
+                    <div class="cmd-name">git merge</div>
+                    <div class="cmd-desc">Fusionner</div>
+                </div>
+            </div>
+            <p class="reveal" style="margin-top: var(--content-gap); font-size: var(--body-size); color: var(--text-dim);">
+                <span style="color: var(--accent);">$</span> git commit -m <span style="color: var(--accent-orange);">"now you know the basics"</span><span class="cursor"></span>
+            </p>
+        </div>
+    </section>
+
+    <!-- === KEYBOARD HINT === -->
+    <div class="keyboard-hint decorative">↑↓ / espace pour naviguer</div>
+
+    <script>
+        /* ===========================================
+           SLIDE PRESENTATION CONTROLLER
+           Handles navigation, animations, progress
+           =========================================== */
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.isScrolling = false;
+                this.scrollTimeout = null;
+
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupWheelNav();
+                this.setupProgressBar();
+                this.setupNavDots();
+
+                /* Mark first slide as visible */
+                this.slides[0].classList.add('visible');
+            }
+
+            /* --- Intersection Observer: trigger .visible on scroll --- */
+            setupIntersectionObserver() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            const index = Array.from(this.slides).indexOf(entry.target);
+                            this.currentSlide = index;
+                            this.updateProgressBar();
+                            this.updateNavDots();
+                        }
+                    });
+                }, { threshold: 0.5 });
+
+                this.slides.forEach(slide => observer.observe(slide));
+            }
+
+            /* --- Keyboard navigation --- */
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    switch (e.key) {
+                        case 'ArrowDown':
+                        case 'ArrowRight':
+                        case ' ':
+                        case 'PageDown':
+                            e.preventDefault();
+                            this.goToSlide(this.currentSlide + 1);
+                            break;
+                        case 'ArrowUp':
+                        case 'ArrowLeft':
+                        case 'PageUp':
+                            e.preventDefault();
+                            this.goToSlide(this.currentSlide - 1);
+                            break;
+                        case 'Home':
+                            e.preventDefault();
+                            this.goToSlide(0);
+                            break;
+                        case 'End':
+                            e.preventDefault();
+                            this.goToSlide(this.slides.length - 1);
+                            break;
+                    }
+                });
+            }
+
+            /* --- Touch / swipe support --- */
+            setupTouchNav() {
+                let touchStartY = 0;
+                document.addEventListener('touchstart', (e) => {
+                    touchStartY = e.touches[0].clientY;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    const delta = touchStartY - e.changedTouches[0].clientY;
+                    if (Math.abs(delta) > 50) {
+                        this.goToSlide(this.currentSlide + (delta > 0 ? 1 : -1));
+                    }
+                }, { passive: true });
+            }
+
+            /* --- Mouse wheel navigation --- */
+            setupWheelNav() {
+                document.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    if (this.isScrolling) return;
+                    this.isScrolling = true;
+
+                    if (e.deltaY > 0) {
+                        this.goToSlide(this.currentSlide + 1);
+                    } else {
+                        this.goToSlide(this.currentSlide - 1);
+                    }
+
+                    clearTimeout(this.scrollTimeout);
+                    this.scrollTimeout = setTimeout(() => {
+                        this.isScrolling = false;
+                    }, 800);
+                }, { passive: false });
+            }
+
+            /* --- Navigate to slide --- */
+            goToSlide(index) {
+                if (index < 0 || index >= this.slides.length) return;
+                this.currentSlide = index;
+                this.slides[index].scrollIntoView({ behavior: 'smooth' });
+                this.updateProgressBar();
+                this.updateNavDots();
+            }
+
+            /* --- Progress bar --- */
+            setupProgressBar() {
+                this.progressBar = document.getElementById('progressBar');
+                this.updateProgressBar();
+            }
+            updateProgressBar() {
+                const progress = ((this.currentSlide + 1) / this.slides.length) * 100;
+                this.progressBar.style.width = progress + '%';
+            }
+
+            /* --- Navigation dots --- */
+            setupNavDots() {
+                const container = document.getElementById('navDots');
+                this.slides.forEach((_, i) => {
+                    const dot = document.createElement('button');
+                    dot.classList.add('nav-dot');
+                    if (i === 0) dot.classList.add('active');
+                    dot.setAttribute('aria-label', `Slide ${i + 1}`);
+                    dot.addEventListener('click', () => this.goToSlide(i));
+                    container.appendChild(dot);
+                });
+                this.navDotElements = container.querySelectorAll('.nav-dot');
+            }
+            updateNavDots() {
+                this.navDotElements.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === this.currentSlide);
+                });
+            }
+        }
+
+        /* Initialize on DOM ready */
+        new SlidePresentation();
+    </script>
+</body>
+</html>
