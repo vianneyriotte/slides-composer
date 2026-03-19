@@ -17,7 +17,7 @@ type SavedKey = {
   updatedAt: Date;
 };
 
-const providers: AiProvider[] = ["claude", "openai", "gemini", "mistral"];
+const providers = Object.keys(PROVIDER_INFO) as AiProvider[];
 
 export function SettingsClient({ initialKeys }: { initialKeys: SavedKey[] }) {
   const router = useRouter();
