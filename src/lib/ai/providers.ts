@@ -39,6 +39,7 @@ export const PROVIDER_INFO: Record<AiProvider, { name: string; placeholder: stri
   openai: { name: "ChatGPT (OpenAI)", placeholder: "sk-...", model: "gpt-4o" },
   gemini: { name: "Gemini (Google)", placeholder: "AIza...", model: "gemini-2.0-flash" },
   mistral: { name: "Mistral", placeholder: "...", model: "mistral-large-latest" },
+  github: { name: "GitHub Models", placeholder: "ghp_... ou github_pat_...", model: "openai/gpt-4o" },
 };
 
 async function generateWithClaude(apiKey: string, prompt: string): Promise<string> {
@@ -75,6 +76,22 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<strin
   return response.text ?? "";
 }
 
+async function generateWithGitHub(token: string, prompt: string): Promise<string> {
+  const client = new OpenAI({
+    apiKey: token,
+    baseURL: "https://models.github.ai/inference",
+  });
+  const response = await client.chat.completions.create({
+    model: PROVIDER_INFO.github.model,
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: prompt },
+    ],
+    max_tokens: 4096,
+  });
+  return response.choices[0]?.message?.content ?? "";
+}
+
 async function generateWithMistral(apiKey: string, prompt: string): Promise<string> {
   const client = new Mistral({ apiKey });
   const response = await client.chat.complete({
@@ -103,6 +120,8 @@ export async function generateSlides(
       return generateWithGemini(apiKey, prompt);
     case "mistral":
       return generateWithMistral(apiKey, prompt);
+    case "github":
+      return generateWithGitHub(apiKey, prompt);
     default:
       throw new Error(`Provider inconnu: ${provider}`);
   }

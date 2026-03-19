@@ -58,7 +58,7 @@ export const verification = sqliteTable("verification", {
 // App tables
 // ========================
 
-export const aiProvider = ["claude", "openai", "gemini", "mistral"] as const;
+export const aiProvider = ["claude", "openai", "gemini", "mistral", "github"] as const;
 export type AiProvider = (typeof aiProvider)[number];
 
 export const apiKey = sqliteTable("api_key", {
