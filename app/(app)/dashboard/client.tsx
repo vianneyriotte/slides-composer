@@ -15,6 +15,7 @@ type Presentation = {
   title: string;
   slug: string;
   isPublic: boolean;
+  hasMarkdown: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -127,14 +128,20 @@ export function DashboardClient({ presentations }: { presentations: Presentation
                   {p.createdAt.toLocaleDateString("fr-FR")}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex gap-2">
+              <CardContent className="flex flex-wrap gap-2">
+                <Link
+                  href={`/dashboard/edit/${p.id}`}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Modifier
+                </Link>
                 <Button variant="outline" size="sm" onClick={() => copyLink(p.slug)}>
                   Copier le lien
                 </Button>
                 <Link
                   href={`/p/${p.slug}`}
                   target="_blank"
-                  className="inline-flex h-7 items-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
                 >
                   Voir
                 </Link>

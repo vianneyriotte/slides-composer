@@ -77,6 +77,8 @@ export const presentation = sqliteTable("presentation", {
   title: text("title").notNull(),
   slug: text("slug").notNull().unique(),
   html: text("html").notNull(),
+  markdown: text("markdown"), // null = uploaded HTML, non-null = created via editor
+  presetId: text("preset_id"), // style preset used when created via editor
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),

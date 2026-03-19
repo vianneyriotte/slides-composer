@@ -13,6 +13,7 @@ export default async function DashboardPage() {
       title: presentation.title,
       slug: presentation.slug,
       isPublic: presentation.isPublic,
+      hasMarkdown: presentation.markdown,
       createdAt: presentation.createdAt,
       updatedAt: presentation.updatedAt,
     })
