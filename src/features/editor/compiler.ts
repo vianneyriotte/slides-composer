@@ -152,7 +152,7 @@ function renderSlide(slide: SlideContent, index: number, total: number): string 
             <span style="width:clamp(6px,0.7vw,10px);height:clamp(6px,0.7vw,10px);border-radius:50%;background:var(--accent);"></span>
             <span style="font-size:var(--small-size);color:var(--text-dim);margin-left:clamp(4px,0.5vw,8px);">${escapeHtml(slide.code.lang)}</span>
           </div>
-          <div style="padding:clamp(0.5rem,1.5vw,1.2rem);font-family:var(--font-display);font-size:var(--code-size);line-height:1.6;">
+          <div style="padding:clamp(0.5rem,1.5vw,1.2rem);font-family:var(--font-display);font-size:var(--code-size);line-height:1.6;white-space:pre;overflow-x:auto;">
             ${codeHtml}
           </div>
         </div>`;
@@ -232,7 +232,7 @@ export function compileMarkdownToHtml(markdown: string, preset: Preset, title: s
         ul { list-style: none; }
         li { font-size: var(--body-size); color: var(--text-secondary); line-height: 1.5; padding-left: 1.2em; position: relative; }
         li::before { content: '→'; color: var(--accent); position: absolute; left: 0; }
-        code { font-family: var(--font-display); display: block; color: var(--text-primary); }
+        code { font-family: var(--font-display); display: block; color: var(--text-primary); white-space: pre; }
         .reveal {
             opacity: 0; transform: translateY(20px);
             transition: opacity var(--duration-normal) var(--ease-out-expo),
