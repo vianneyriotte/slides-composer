@@ -138,6 +138,13 @@ export function DashboardClient({ presentations }: { presentations: Presentation
                 <Button variant="outline" size="sm" onClick={() => copyLink(p.slug)}>
                   Copier le lien
                 </Button>
+                <a
+                  href={`/api/download/${p.id}`}
+                  download
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Télécharger
+                </a>
                 <Link
                   href={`/p/${p.slug}`}
                   target="_blank"
