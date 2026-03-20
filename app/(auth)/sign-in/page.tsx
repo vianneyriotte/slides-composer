@@ -7,6 +7,7 @@ import { signIn } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { OAuthButtons } from "@/components/oauth-buttons";
 import { toast } from "sonner";
 
 export default function SignInPage() {
@@ -37,8 +38,19 @@ export default function SignInPage() {
           <CardTitle>Connexion</CardTitle>
           <CardDescription>Connectez-vous à votre compte</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+        <CardContent className="space-y-4">
+          <OAuthButtons />
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">ou</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               type="email"
               placeholder="email@exemple.com"
@@ -53,19 +65,19 @@ export default function SignInPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-          </CardContent>
-          <CardFooter className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Connexion..." : "Se connecter"}
             </Button>
-            <p className="text-sm text-muted-foreground">
-              Pas encore de compte ?{" "}
-              <Link href="/sign-up" className="text-primary underline underline-offset-4">
-                S&apos;inscrire
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <p className="w-full text-center text-sm text-muted-foreground">
+            Pas encore de compte ?{" "}
+            <Link href="/sign-up" className="text-primary underline underline-offset-4">
+              S&apos;inscrire
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

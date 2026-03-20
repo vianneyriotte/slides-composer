@@ -11,6 +11,20 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  socialProviders: {
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+    gitlab: {
+      clientId: process.env.GITLAB_CLIENT_ID!,
+      clientSecret: process.env.GITLAB_CLIENT_SECRET!,
+    },
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day

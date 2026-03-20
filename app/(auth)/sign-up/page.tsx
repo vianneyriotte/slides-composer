@@ -7,6 +7,7 @@ import { signUp } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { OAuthButtons } from "@/components/oauth-buttons";
 import { toast } from "sonner";
 
 export default function SignUpPage() {
@@ -38,8 +39,19 @@ export default function SignUpPage() {
           <CardTitle>Inscription</CardTitle>
           <CardDescription>Créez votre compte Slide Composer</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+        <CardContent className="space-y-4">
+          <OAuthButtons />
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">ou</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               type="text"
               placeholder="Votre nom"
@@ -62,19 +74,19 @@ export default function SignUpPage() {
               minLength={8}
               required
             />
-          </CardContent>
-          <CardFooter className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Inscription..." : "S'inscrire"}
             </Button>
-            <p className="text-sm text-muted-foreground">
-              Déjà un compte ?{" "}
-              <Link href="/sign-in" className="text-primary underline underline-offset-4">
-                Se connecter
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <p className="w-full text-center text-sm text-muted-foreground">
+            Déjà un compte ?{" "}
+            <Link href="/sign-in" className="text-primary underline underline-offset-4">
+              Se connecter
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );
