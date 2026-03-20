@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "@/lib/auth/client";
+import { signIn, authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,8 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [sendingMagicLink, setSendingMagicLink] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,6 +31,53 @@ export default function SignInPage() {
     }
 
     router.push("/dashboard");
+  }
+
+  async function handleMagicLink() {
+    if (!email.trim()) {
+      toast.error("Entrez votre email d'abord");
+      return;
+    }
+    setSendingMagicLink(true);
+
+    const { error } = await authClient.signIn.magicLink({
+      email,
+      callbackURL: "/dashboard",
+    });
+
+    setSendingMagicLink(false);
+
+    if (error) {
+      toast.error(error.message ?? "Erreur lors de l'envoi");
+      return;
+    }
+
+    setMagicLinkSent(true);
+  }
+
+  if (magicLinkSent) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Vérifiez votre email</CardTitle>
+            <CardDescription>
+              Un lien de connexion a été envoyé à <strong>{email}</strong>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Cliquez sur le lien dans l&apos;email pour vous connecter. Le lien expire dans 5 minutes.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="ghost" className="w-full" onClick={() => setMagicLinkSent(false)}>
+              ← Retour
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -58,17 +107,33 @@ export default function SignInPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <Input
-              type="password"
-              placeholder="Mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div>
+              <Input
+                type="password"
+                placeholder="Mot de passe"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <div className="mt-1 text-right">
+                <Link href="/forgot-password" className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground">
+                  Mot de passe oublié ?
+                </Link>
+              </div>
+            </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Connexion..." : "Se connecter"}
             </Button>
           </form>
+
+          <Button
+            variant="ghost"
+            className="w-full text-sm"
+            onClick={handleMagicLink}
+            disabled={sendingMagicLink}
+          >
+            {sendingMagicLink ? "Envoi..." : "Recevoir un lien par email"}
+          </Button>
         </CardContent>
         <CardFooter>
           <p className="w-full text-center text-sm text-muted-foreground">
