@@ -70,10 +70,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Drizzle config + schema + node_modules for db push at startup
-COPY --from=builder /app/node_modules ./drizzle-cli/node_modules
-COPY --from=builder /app/drizzle.config.ts ./
-COPY --from=builder /app/src/lib/db ./src/lib/db
+# Copy migration script + node_modules for db init at startup
+COPY --from=builder /app/scripts/migrate.mjs ./scripts/
+COPY --from=builder /app/node_modules ./migrate_modules
 
 # Create data directory for SQLite database
 RUN mkdir -p data && chown nextjs:nodejs data
