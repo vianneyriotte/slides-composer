@@ -2,7 +2,7 @@ export function Footer() {
   return (
     <footer className="border-t px-4 py-8">
       <div className="mx-auto flex max-w-5xl items-center justify-between text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} Slide Composer</p>
+        <p>&copy; {new Date().getFullYear()} Slides Composer</p>
         <p>
           Propulsé par{" "}
           <a

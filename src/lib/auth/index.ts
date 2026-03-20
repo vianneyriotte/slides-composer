@@ -15,7 +15,7 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
-        subject: "Réinitialisation de votre mot de passe — Slide Composer",
+        subject: "Réinitialisation de votre mot de passe — Slides Composer",
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
             <h2 style="margin-bottom:16px;">Réinitialisation du mot de passe</h2>
@@ -38,10 +38,10 @@ export const auth = betterAuth({
       sendMagicLink: async ({ email, url }) => {
         await sendEmail({
           to: email,
-          subject: "Votre lien de connexion — Slide Composer",
+          subject: "Votre lien de connexion — Slides Composer",
           html: `
             <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
-              <h2 style="margin-bottom:16px;">Connexion à Slide Composer</h2>
+              <h2 style="margin-bottom:16px;">Connexion à Slides Composer</h2>
               <p>Cliquez sur le lien ci-dessous pour vous connecter :</p>
               <p style="margin:24px 0;">
                 <a href="${url}" style="background:#18181b;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">

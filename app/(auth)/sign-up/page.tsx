@@ -38,7 +38,7 @@ export default function SignUpPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Inscription</CardTitle>
-          <CardDescription>Créez votre compte Slide Composer</CardDescription>
+          <CardDescription>Créez votre compte Slides Composer</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <OAuthButtons />

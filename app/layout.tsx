@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Slide Composer",
+  title: "Slides Composer",
   description: "Host and create beautiful HTML presentations",
 };
 

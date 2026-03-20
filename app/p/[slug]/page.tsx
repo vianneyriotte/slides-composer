@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!result[0]) return { title: "Présentation introuvable" };
 
-  return { title: `${result[0].title} — Slide Composer` };
+  return { title: `${result[0].title} — Slides Composer` };
 }
 
 export default async function PresentationPage({ params }: Props) {
