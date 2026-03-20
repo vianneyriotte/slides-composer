@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,10 @@ export function SlideEditor({ mode = "create", initialData }: EditorProps) {
   const [aiProvider, setAiProvider] = useState<AiProvider>("claude");
   const [generating, setGenerating] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const compiledHtml = useMemo(
@@ -99,6 +102,43 @@ export function SlideEditor({ mode = "create", initialData }: EditorProps) {
       router.refresh();
     }
   }, [title, compiledHtml, markdown, selectedPreset, isEditMode, isHtmlMode, initialData, router]);
+
+  const handleImageUpload = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/uploads", { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error ?? "Erreur lors de l'upload");
+        setUploading(false);
+        return;
+      }
+
+      const imageMarkdown = `![${file.name}](${data.url})`;
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const pos = textarea.selectionStart;
+        const before = markdown.slice(0, pos);
+        const after = markdown.slice(pos);
+        setMarkdown(before + imageMarkdown + "\n" + after);
+      } else {
+        setMarkdown((prev) => prev + "\n" + imageMarkdown + "\n");
+      }
+      toast.success("Image ajoutée !");
+    } catch {
+      toast.error("Erreur réseau");
+    }
+
+    setUploading(false);
+    e.target.value = "";
+  }, [markdown]);
 
   const handleGenerate = useCallback(async () => {
     if (!aiPrompt.trim()) return;
@@ -278,9 +318,28 @@ export function SlideEditor({ mode = "create", initialData }: EditorProps) {
             <div className="flex flex-1 flex-col overflow-hidden p-3">
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-xs font-medium text-muted-foreground">Markdown</p>
-                <p className="text-xs text-muted-foreground">Séparez les slides avec ---</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                    {uploading ? "Upload..." : "Image"}
+                  </button>
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <p className="text-xs text-muted-foreground">Séparez les slides avec ---</p>
+                </div>
               </div>
               <textarea
+                ref={textareaRef}
                 value={markdown}
                 onChange={(e) => setMarkdown(e.target.value)}
                 className="flex-1 resize-none rounded-md border bg-muted/30 p-3 font-mono text-sm leading-relaxed outline-none focus:ring-1 focus:ring-ring"

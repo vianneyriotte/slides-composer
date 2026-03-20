@@ -34,6 +34,7 @@ type SlideContent = {
   bullets: string[];
   code?: { lang: string; content: string };
   paragraphs: string[];
+  images: { src: string; alt: string }[];
 };
 
 function parseSlide(md: string): SlideContent {
@@ -43,6 +44,7 @@ function parseSlide(md: string): SlideContent {
     heading: "",
     bullets: [],
     paragraphs: [],
+    images: [],
   };
 
   let inCode = false;
@@ -64,6 +66,12 @@ function parseSlide(md: string): SlideContent {
 
     if (inCode) {
       codeLines.push(line);
+      continue;
+    }
+
+    const imgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
+    if (imgMatch) {
+      slide.images.push({ alt: imgMatch[1], src: imgMatch[2] });
       continue;
     }
 
@@ -98,6 +106,7 @@ function renderSlide(slide: SlideContent, index: number, total: number): string 
       <div class="slide-content" style="align-items:center;text-align:center;">
         <h1 class="reveal" style="font-size:var(--title-size);font-weight:700;color:var(--accent);text-shadow:0 0 20px var(--accent-glow);line-height:1;margin-bottom:clamp(0.3rem,1vw,0.8rem);">${escapeHtml(slide.heading)}</h1>
         ${slide.subtitle ? `<p class="reveal" style="font-size:var(--body-size);color:var(--text-secondary);">${escapeHtml(slide.subtitle)}</p>` : ""}
+        ${slide.images.map((img) => `<div class="reveal" style="margin-top:clamp(0.5rem,1vw,1rem);"><img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt)}" style="max-width:min(60vw,500px);max-height:40vh;object-fit:contain;border-radius:8px;" /></div>`).join("\n        ")}
         <p class="reveal" style="margin-top:clamp(1rem,3vw,3rem);font-size:var(--small-size);color:var(--text-dim);">${total} slides</p>
       </div>
     </section>`;
@@ -119,6 +128,15 @@ function renderSlide(slide: SlideContent, index: number, total: number): string 
         <ul style="list-style:none;display:flex;flex-direction:column;gap:clamp(0.3rem,0.8vh,0.6rem);max-width:min(80vw,700px);">
           ${items}
         </ul>`;
+  }
+
+  if (slide.images.length > 0) {
+    content += slide.images
+      .map((img) => `
+        <div class="reveal" style="display:flex;justify-content:center;">
+          <img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt)}" style="max-width:min(80vw,700px);max-height:50vh;object-fit:contain;border-radius:8px;" />
+        </div>`)
+      .join("\n");
   }
 
   if (slide.code) {
