@@ -71,7 +71,7 @@ export function DashboardClient({ presentations }: { presentations: Presentation
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Mes présentations</h1>
@@ -119,7 +119,7 @@ export function DashboardClient({ presentations }: { presentations: Presentation
           Aucune présentation. Uploadez votre premier fichier HTML !
         </p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {presentations.map((p) => (
             <Card key={p.id}>
               <CardHeader className="pb-2">
