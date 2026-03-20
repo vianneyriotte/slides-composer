@@ -45,9 +45,7 @@ coverage
 .nyc_output
 
 # Docker
-Dockerfile
 docker-compose*.yml
-.dockerignore
 
 # Documentation
 *.md
