@@ -6,6 +6,7 @@ import Link from "next/link";
 import { signUp } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { OAuthButtons } from "@/components/oauth-buttons";
 import { toast } from "sonner";
@@ -66,8 +67,7 @@ export default function SignUpPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="Mot de passe (min. 8 caractères)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

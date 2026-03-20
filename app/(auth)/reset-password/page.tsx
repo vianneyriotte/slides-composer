@@ -1,19 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (!token) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>Lien invalide</CardTitle>
+            <CardDescription>Ce lien de réinitialisation est invalide ou a expiré.</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Link href="/forgot-password" className="text-sm text-primary underline underline-offset-4">
+              Demander un nouveau lien
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,6 +52,7 @@ export default function ResetPasswordPage() {
 
     const { error } = await authClient.resetPassword({
       newPassword: password,
+      token: token!,
     });
 
     setLoading(false);
@@ -54,16 +75,14 @@ export default function ResetPasswordPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="Nouveau mot de passe"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               minLength={8}
               required
             />
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="Confirmer le mot de passe"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}

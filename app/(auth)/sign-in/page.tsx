@@ -6,6 +6,7 @@ import Link from "next/link";
 import { signIn, authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { OAuthButtons } from "@/components/oauth-buttons";
 import { toast } from "sonner";
@@ -108,8 +109,7 @@ export default function SignInPage() {
               required
             />
             <div>
-              <Input
-                type="password"
+              <PasswordInput
                 placeholder="Mot de passe"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
