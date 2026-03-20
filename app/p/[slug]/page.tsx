@@ -3,6 +3,7 @@ import { presentation } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { Download } from "lucide-react";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -33,11 +34,21 @@ export default async function PresentationPage({ params }: Props) {
   if (!result[0] || !result[0].isPublic) notFound();
 
   return (
-    <iframe
-      srcDoc={result[0].html}
-      title={result[0].title}
-      className="h-screen w-screen border-0"
-      sandbox="allow-scripts allow-same-origin"
-    />
+    <div className="relative h-screen w-screen">
+      <iframe
+        srcDoc={result[0].html}
+        title={result[0].title}
+        className="h-full w-full border-0"
+        sandbox="allow-scripts allow-same-origin"
+      />
+      <a
+        href={`/api/download/public/${slug}`}
+        download
+        className="fixed bottom-4 right-4 flex items-center gap-2 rounded-full bg-black/70 px-4 py-2 text-sm text-white shadow-lg backdrop-blur-sm transition-opacity hover:bg-black/90"
+      >
+        <Download className="h-4 w-4" />
+        Télécharger
+      </a>
+    </div>
   );
 }
