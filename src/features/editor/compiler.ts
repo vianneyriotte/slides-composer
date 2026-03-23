@@ -27,6 +27,13 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/** Format inline markdown: **bold**, `code`, [links](url) */
+function formatInline(text: string): string {
+  return escapeHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text-primary);font-weight:600;">$1</strong>')
+    .replace(/`(.+?)`/g, '<code style="background:var(--bg-secondary);padding:0.1em 0.4em;border-radius:3px;font-size:0.9em;">$1</code>');
+}
+
 type TableData = {
   headers: string[];
   rows: string[][];
@@ -118,6 +125,15 @@ function parseSlide(md: string): SlideContent {
       slide.heading = line.slice(2).trim();
     } else if (line.startsWith("## ")) {
       slide.heading = line.slice(3).trim();
+    } else if (line.startsWith("### ")) {
+      // Sub-heading treated as a bold paragraph
+      slide.paragraphs.push(`**${line.slice(4).trim()}**`);
+    } else if (/^\d+\.\s/.test(line)) {
+      // Numbered list item → bullet with number prefix
+      slide.bullets.push(line.trim());
+    } else if (/^\s+[-*]\s/.test(line)) {
+      // Indented sub-item → bullet with indent marker
+      slide.bullets.push("  " + line.trim().slice(2).trim());
     } else if (line.startsWith("- ") || line.startsWith("* ")) {
       slide.bullets.push(line.slice(2).trim());
     } else if (line.trim() && !slide.heading) {
@@ -148,7 +164,7 @@ function renderSlide(slide: SlideContent, index: number, total: number): string 
     <section class="slide" aria-label="${escapeHtml(slide.heading)}">
       <div class="slide-content" style="align-items:center;text-align:center;">
         <h1 class="reveal" style="font-size:var(--title-size);font-weight:700;color:var(--accent);text-shadow:0 0 20px var(--accent-glow);line-height:1;margin-bottom:clamp(0.3rem,1vw,0.8rem);">${escapeHtml(slide.heading)}</h1>
-        ${slide.subtitle ? `<p class="reveal" style="font-size:var(--body-size);color:var(--text-secondary);">${escapeHtml(slide.subtitle)}</p>` : ""}
+        ${slide.subtitle ? `<p class="reveal" style="font-size:var(--body-size);color:var(--text-secondary);">${formatInline(slide.subtitle)}</p>` : ""}
         ${slide.images.map((img) => `<div class="reveal" style="margin-top:clamp(0.5rem,1vw,1rem);"><img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt)}" style="max-width:min(60vw,500px);max-height:40vh;object-fit:contain;border-radius:8px;" /></div>`).join("\n        ")}
         <p class="reveal" style="margin-top:clamp(1rem,3vw,3rem);font-size:var(--small-size);color:var(--text-dim);">${total} slides</p>
       </div>
@@ -159,16 +175,27 @@ function renderSlide(slide: SlideContent, index: number, total: number): string 
 
   if (slide.paragraphs.length > 0 && !slide.code && slide.bullets.length === 0) {
     content = slide.paragraphs
-      .map((p) => `<p class="reveal" style="font-size:var(--body-size);color:var(--text-secondary);line-height:1.6;max-width:min(80vw,700px);">${escapeHtml(p)}</p>`)
+      .map((p) => `<p class="reveal" style="font-size:var(--body-size);color:var(--text-secondary);line-height:1.6;max-width:min(80vw,700px);">${formatInline(p)}</p>`)
       .join("\n        ");
   }
 
   if (slide.bullets.length > 0) {
     const items = slide.bullets
-      .map((b) => `<li class="reveal">${escapeHtml(b)}</li>`)
+      .map((b) => {
+        const isSubItem = b.startsWith("  ");
+        const text = isSubItem ? b.slice(2) : b;
+        const paddingLeft = isSubItem ? "2.4em" : "1.2em";
+        const fontSize = isSubItem ? "var(--small-size)" : "var(--body-size)";
+        // Numbered items: extract number as prefix
+        const numMatch = text.match(/^(\d+)\.\s+(.*)/);
+        if (numMatch) {
+          return `<li class="reveal" data-num="${numMatch[1]}" style="padding-left:${paddingLeft};font-size:${fontSize};">${formatInline(numMatch[2])}</li>`;
+        }
+        return `<li class="reveal" style="padding-left:${paddingLeft};font-size:${fontSize};">${formatInline(text)}</li>`;
+      })
       .join("\n            ");
     content += `
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:clamp(0.3rem,0.8vh,0.6rem);max-width:min(80vw,700px);">
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:clamp(0.2rem,0.5vh,0.4rem);max-width:min(80vw,700px);">
           ${items}
         </ul>`;
   }
@@ -184,12 +211,12 @@ function renderSlide(slide: SlideContent, index: number, total: number): string 
 
   if (slide.table) {
     const headerCells = slide.table.headers
-      .map((h) => `<th style="padding:clamp(0.3rem,0.8vw,0.6rem) clamp(0.5rem,1vw,1rem);text-align:left;font-size:var(--small-size);color:var(--accent);font-weight:600;border-bottom:2px solid var(--accent);white-space:nowrap;">${escapeHtml(h)}</th>`)
+      .map((h) => `<th style="padding:clamp(0.3rem,0.8vw,0.6rem) clamp(0.5rem,1vw,1rem);text-align:left;font-size:var(--small-size);color:var(--accent);font-weight:600;border-bottom:2px solid var(--accent);white-space:nowrap;">${formatInline(h)}</th>`)
       .join("\n                ");
     const bodyRows = slide.table.rows
       .map((row) => {
         const cells = row
-          .map((cell) => `<td style="padding:clamp(0.25rem,0.6vw,0.5rem) clamp(0.5rem,1vw,1rem);font-size:var(--small-size);color:var(--text-secondary);border-bottom:1px solid var(--border);">${escapeHtml(cell)}</td>`)
+          .map((cell) => `<td style="padding:clamp(0.25rem,0.6vw,0.5rem) clamp(0.5rem,1vw,1rem);font-size:var(--small-size);color:var(--text-secondary);border-bottom:1px solid var(--border);">${formatInline(cell)}</td>`)
           .join("\n                  ");
         return `<tr class="reveal">\n                  ${cells}\n                </tr>`;
       })
@@ -297,6 +324,7 @@ export function compileMarkdownToHtml(markdown: string, preset: Preset, title: s
         ul { list-style: none; }
         li { font-size: var(--body-size); color: var(--text-secondary); line-height: 1.5; padding-left: 1.2em; position: relative; }
         li::before { content: '→'; color: var(--accent); position: absolute; left: 0; }
+        li[data-num]::before { content: attr(data-num) '.'; }
         code { font-family: var(--font-display); color: var(--text-primary); }
         pre { margin: 0; white-space: pre; }
         table tr:hover td { background: rgba(255,255,255,0.03); }
