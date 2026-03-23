@@ -27,6 +27,11 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+type TableData = {
+  headers: string[];
+  rows: string[][];
+};
+
 type SlideContent = {
   type: "title" | "content";
   heading: string;
@@ -35,7 +40,16 @@ type SlideContent = {
   code?: { lang: string; content: string };
   paragraphs: string[];
   images: { src: string; alt: string }[];
+  table?: TableData;
 };
+
+function parseTableRow(line: string): string[] {
+  return line.split("|").slice(1, -1).map((cell) => cell.trim());
+}
+
+function isTableSeparator(line: string): boolean {
+  return /^\|[\s\-:|]+\|$/.test(line.trim());
+}
 
 function parseSlide(md: string): SlideContent {
   const lines = md.trim().split("\n");
@@ -50,8 +64,13 @@ function parseSlide(md: string): SlideContent {
   let inCode = false;
   let codeLang = "";
   let codeLines: string[] = [];
+  let inTable = false;
+  let tableHeaders: string[] = [];
+  let tableRows: string[][] = [];
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
     if (line.startsWith("```")) {
       if (!inCode) {
         inCode = true;
@@ -67,6 +86,25 @@ function parseSlide(md: string): SlideContent {
     if (inCode) {
       codeLines.push(line);
       continue;
+    }
+
+    // Detect table: line starts with | and next line is a separator
+    if (!inTable && line.trim().startsWith("|") && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
+      inTable = true;
+      tableHeaders = parseTableRow(line);
+      continue;
+    }
+
+    if (inTable) {
+      if (isTableSeparator(line)) continue;
+      if (line.trim().startsWith("|")) {
+        tableRows.push(parseTableRow(line));
+        continue;
+      } else {
+        // End of table
+        inTable = false;
+        slide.table = { headers: tableHeaders, rows: tableRows };
+      }
     }
 
     const imgMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
@@ -91,6 +129,11 @@ function parseSlide(md: string): SlideContent {
         slide.paragraphs.push(line.trim());
       }
     }
+  }
+
+  // Finalize table if it was the last element
+  if (inTable && tableHeaders.length > 0) {
+    slide.table = { headers: tableHeaders, rows: tableRows };
   }
 
   return slide;
@@ -137,6 +180,33 @@ function renderSlide(slide: SlideContent, index: number, total: number): string 
           <img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt)}" style="max-width:min(80vw,700px);max-height:50vh;object-fit:contain;border-radius:8px;" />
         </div>`)
       .join("\n");
+  }
+
+  if (slide.table) {
+    const headerCells = slide.table.headers
+      .map((h) => `<th style="padding:clamp(0.3rem,0.8vw,0.6rem) clamp(0.5rem,1vw,1rem);text-align:left;font-size:var(--small-size);color:var(--accent);font-weight:600;border-bottom:2px solid var(--accent);white-space:nowrap;">${escapeHtml(h)}</th>`)
+      .join("\n                ");
+    const bodyRows = slide.table.rows
+      .map((row) => {
+        const cells = row
+          .map((cell) => `<td style="padding:clamp(0.25rem,0.6vw,0.5rem) clamp(0.5rem,1vw,1rem);font-size:var(--small-size);color:var(--text-secondary);border-bottom:1px solid var(--border);">${escapeHtml(cell)}</td>`)
+          .join("\n                  ");
+        return `<tr class="reveal">\n                  ${cells}\n                </tr>`;
+      })
+      .join("\n                ");
+    content += `
+        <div class="reveal" style="overflow-x:auto;max-width:min(90vw,800px);">
+          <table style="width:100%;border-collapse:collapse;background:var(--bg-secondary);border-radius:6px;overflow:hidden;">
+            <thead>
+              <tr>
+                ${headerCells}
+              </tr>
+            </thead>
+            <tbody>
+                ${bodyRows}
+            </tbody>
+          </table>
+        </div>`;
   }
 
   if (slide.code) {
@@ -229,6 +299,7 @@ export function compileMarkdownToHtml(markdown: string, preset: Preset, title: s
         li::before { content: '→'; color: var(--accent); position: absolute; left: 0; }
         code { font-family: var(--font-display); color: var(--text-primary); }
         pre { margin: 0; white-space: pre; }
+        table tr:hover td { background: rgba(255,255,255,0.03); }
         .reveal {
             opacity: 0; transform: translateY(20px);
             transition: opacity var(--duration-normal) var(--ease-out-expo),
